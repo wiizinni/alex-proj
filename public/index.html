@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pop Quiz Party</title>
+<style>
+:root{--bg:#fff;--fg:#1b1b24;--card:#f1effb;--ac:#6d4aff;--ok:#1a9a5a;--mu:#6b6b7b}
+@media (prefers-color-scheme:dark){:root{--bg:#14131c;--fg:#f0eefa;--card:#211f2f;--ac:#9b83ff;--ok:#4fd18b;--mu:#a09fb3}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px;display:grid;gap:12px}
+h1{margin:0;font-size:1.5rem}h2{margin:0 0 8px;font-size:1rem}
+.card{background:var(--card);border-radius:14px;padding:14px}
+input,select,button{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--mu);background:var(--bg);color:var(--fg);max-width:100%;box-sizing:border-box}
+button{background:var(--ac);color:#fff;border:0;cursor:pointer;font-weight:600}
+button.g{background:transparent;color:var(--fg);border:1px solid var(--mu)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.row input{flex:1;min-width:120px}
+#q{font-size:1.3rem;font-weight:700;margin:6px 0}
+#img{max-width:100%;max-height:300px;border-radius:10px;display:block;margin:8px 0}
+.mu{color:var(--mu);font-size:.9rem}.ok{color:var(--ok);font-weight:700}li{margin:4px 0}
+#code{font-size:1.6rem;letter-spacing:.2em;font-weight:800}
+</style></head>
+<body><main>
+<h1>🎉 Pop Quiz Party</h1>
+<section class="card" id="home">
+  <div class="row"><input id="nm" placeholder="Your nickname" maxlength="20"></div>
+  <div class="row"><button id="cr">Create a room</button></div>
+  <div class="row"><input id="jc" placeholder="Room code" maxlength="4" style="text-transform:uppercase"><button class="g" id="jn">Join</button></div>
+  <div class="mu" id="err"></div>
+</section>
+<div id="room" hidden style="display:grid;gap:12px">
+  <section class="card row"><span class="mu">Room</span><span id="code"></span><button class="g" id="cp">Copy invite link</button><button class="g" id="lv">Leave</button></section>
+  <section class="card" id="game"></section>
+  <div class="row" id="gr" hidden><input id="gi" placeholder="Type your answer…" autocomplete="off"><button id="gb">Guess</button></div>
+  <section class="card"><h2>Scoreboard</h2><ol id="board"></ol></section>
+  <section class="card" id="host" hidden>
+    <h2>Host controls</h2>
+    <div class="row"><button id="nx">Next question</button><button class="g" id="rv">Reveal now</button><button class="g" id="rs">Reset scores</button></div>
+    <div class="row"><span class="mu">Seconds per question</span><input id="lm" type="number" min="5" max="60" value="20" style="flex:0 0 80px"></div>
+    <h2>Add a question</h2>
+    <div class="row"><select id="ht"><option value="text">Text</option><option value="image">Image</option></select><input id="hp" placeholder="Prompt (e.g. Which show is this from?)"></div>
+    <div class="row" id="hfw" hidden><input type="file" id="hf" accept="image/*"></div>
+    <div class="row"><input id="ha" placeholder="Accepted answers, comma separated"><button id="ad">Add</button></div>
+    <div class="mu" id="hs"></div>
+    <ul id="hl"></ul>
+  </section>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let S=null,es=null,recv=0,ses=null,lastQ=null;
+try{ses=JSON.parse(sessionStorage.getItem('pq')||'null')}catch(e){}
+try{$('nm').value=localStorage.getItem('pq-name')||''}catch(e){}
+const qp=new URLSearchParams(location.search).get('room');if(qp)$('jc').value=qp.toUpperCase();
+async function api(p,b){const r=await fetch('/api/'+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Something went wrong');return j}
+const name=()=>{const n=$('nm').value.trim()||'Player';try{localStorage.setItem('pq-name',n)}catch(e){}return n};
+const host=a=>api('host',{code:ses.code,token:ses.token,...a}).catch(e=>{$('hs').textContent=e.message});
+function enter(s){ses=s;try{sessionStorage.setItem('pq',JSON.stringify(s))}catch(e){}connect()}
+function leave(m){if(es)es.close();ses=S=null;try{sessionStorage.removeItem('pq')}catch(e){}
+  $('home').hidden=false;$('room').hidden=true;$('err').textContent=m||''}
+$('cr').onclick=async()=>{try{enter(await api('create',{name:name()}))}catch(e){$('err').textContent=e.message}};
+$('jn').onclick=async()=>{const code=$('jc').value.trim().toUpperCase();
+  try{const j=await api('join',{code,name:name()});enter({code,pid:j.pid})}catch(e){$('err').textContent=e.message}};
+$('lv').onclick=()=>leave();
+$('cp').onclick=()=>{const u=location.origin+'/?room='+ses.code;
+  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>$('cp').textContent='Copied ✓',()=>prompt('Copy this link',u))};
+function connect(){
+  if(es)es.close();
+  es=new EventSource('/api/events?code='+ses.code+'&pid='+ses.pid+(ses.token?'&token='+ses.token:''));
+  es.onmessage=e=>{S=JSON.parse(e.data);recv=Date.now();render()};
+  es.addEventListener('gone',()=>leave('That room no longer exists.'));
+}
+function render(){
+  $('home').hidden=true;$('room').hidden=false;$('code').textContent=S.code;
+  $('host').hidden=!S.host;$('gr').hidden=S.status!=='q';
+  const g=$('game');g.textContent='';const me=S.players.find(p=>p.id===S.me)||{};
+  if(S.status==='idle'||!S.q){g.textContent=S.count?'Waiting for the host to start…':'No questions yet. '+(S.host?'Add some below.':'The host needs to add some.');}
+  else{
+    const p=document.createElement('div');p.id='q';p.textContent=S.q.p;g.append(p);
+    if(S.q.img){const i=document.createElement('img');i.id='img';i.src=S.q.img;i.alt='Quiz image';g.append(i)}
+    const t=document.createElement('div');t.id='tm';t.className='mu';g.append(t);
+    const r=document.createElement('div');r.className='ok';g.append(r);
+    if(S.answer)r.textContent='Answer: '+S.answer;else if(me.got)r.textContent='✓ You got it! +'+me.got;
+  }
+  if(S.status==='q'&&lastQ!==S.q.p+S.q.img){$('gi').value='';$('gi').focus()}
+  lastQ=S.q?S.q.p+S.q.img:null;
+  const b=$('board');b.textContent='';
+  [...S.players].sort((a,c)=>c.score-a.score).forEach(p=>{const l=document.createElement('li');
+    l.textContent=p.name+(p.id===S.me?' (you)':'')+' — '+p.score+(p.on?'':' (away)')+(p.got?' ✓':'');b.append(l)});
+  if(S.host){$('lm').value!==String(S.limit)&&document.activeElement!==$('lm')&&($('lm').value=S.limit);
+    const u=$('hl');u.textContent='';
+    S.qs.forEach(q=>{const l=document.createElement('li');l.textContent=(q.img?'🖼 ':'')+(q.p||'(image)')+' → '+q.a.join(' / ')+' ';
+      const d=document.createElement('button');d.className='g';d.textContent='Delete';d.onclick=()=>host({action:'del',id:q.id});l.append(d);u.append(l)})}
+  clock();
+}
+function clock(){const t=$('tm');if(!t||!S)return;
+  t.textContent=S.status==='q'?Math.max(0,Math.ceil((S.left-(Date.now()-recv))/1000))+'s left':'Round over'}
+setInterval(clock,250);
+async function guess(){const v=$('gi').value.trim();if(!v)return;$('gi').value='';api('guess',{code:ses.code,pid:ses.pid,text:v}).catch(()=>{})}
+$('gb').onclick=guess;$('gi').onkeydown=e=>{if(e.key==='Enter')guess()};
+$('nx').onclick=()=>host({action:'next'});$('rv').onclick=()=>host({action:'reveal'});
+$('rs').onclick=()=>host({action:'reset'});$('lm').onchange=()=>host({action:'limit',n:$('lm').value});
+$('ht').onchange=()=>{$('hfw').hidden=$('ht').value!=='image'};
+function shrink(f){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,1024/Math.max(i.width,i.height)),c=document.createElement('canvas');
+  c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.85))};
+  i.onerror=()=>no(new Error('Could not read image'));i.src=URL.createObjectURL(f)})}
+$('ad').onclick=async()=>{const s=$('hs'),a=$('ha').value.split(',').map(x=>x.trim()).filter(Boolean),m={action:'add',p:$('hp').value.trim(),a};
+  try{if($('ht').value==='image'){const f=$('hf').files[0];if(!f){s.textContent='Choose an image first.';return}s.textContent='Uploading…';m.image=await shrink(f)}}
+  catch(e){s.textContent=e.message;return}
+  s.textContent='';await host(m);if(!s.textContent){s.textContent='Added ✓';$('hp').value=$('ha').value='';$('hf').value=''}};
+if(ses)connect();
+</script></body></html>
