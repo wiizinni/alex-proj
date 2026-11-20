@@ -9,16 +9,17 @@ const clean = (s, n) => String(s || '').trim().slice(0, n);
 
 function newRoom() {
   const r = { code: newCode(), token: rid(), qs: [], players: new Map(), clients: new Set(), status: 'idle',
-    cur: null, t0: 0, limit: 20, deck: [], timer: null, seen: Date.now() };
+    cur: null, t0: 0, limit: 20, deck: [], timer: null, seen: Date.now(), feed: [] };
   rooms.set(r.code, r); return r;
 }
+const say = (r, o) => { r.feed.push(o); if (r.feed.length > 40) r.feed.shift(); };
 function addPlayer(r, name) {
   const id = rid(); r.players.set(id, { name: clean(name, 20) || 'Player', score: 0, got: 0, on: 0 }); return id;
 }
 function view(r, host, pid) {
   const q = r.cur != null ? r.qs.find(x => x.id === r.cur) : null;
   const o = {
-    code: r.code, status: r.status, limit: r.limit, count: r.qs.length, host, me: pid,
+    code: r.code, status: r.status, limit: r.limit, count: r.qs.length, host, me: pid, feed: r.feed,
     left: r.status === 'q' ? Math.max(0, r.limit * 1000 - (Date.now() - r.t0)) : 0,
     q: q ? { p: q.p, img: q.buf ? `/img/${r.code}/${q.id}` : null } : null,
     answer: r.status === 'reveal' && q ? q.a[0] : null,
@@ -32,13 +33,14 @@ function push(r) {
 }
 function reveal(r) {
   if (r.status !== 'q') return;
-  clearTimeout(r.timer); r.status = 'reveal'; push(r);
+  clearTimeout(r.timer); r.status = 'reveal'; say(r, { s: 'Round over' }); push(r);
 }
 function nextQ(r) {
   if (!r.qs.length) return;
   if (!r.deck.length) { r.deck = r.qs.map(q => q.id); for (let i = r.deck.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [r.deck[i], r.deck[j]] = [r.deck[j], r.deck[i]]; } }
   r.cur = r.deck.pop(); r.status = 'q'; r.t0 = Date.now();
   for (const p of r.players.values()) p.got = 0;
+  say(r, { s: 'New question!' });
   clearTimeout(r.timer); r.timer = setTimeout(() => reveal(r), r.limit * 1000); push(r);
 }
 
@@ -102,9 +104,10 @@ const server = http.createServer(async (req, res) => {
       if (act === 'join') return send(res, 200, { pid: addPlayer(r, b.name) });
       if (act === 'guess') {
         const p = r.players.get(b.pid), q = r.qs.find(x => x.id === r.cur);
-        if (p && q && r.status === 'q' && !p.got && q.a.some(a => norm(a) === norm(b.text))) {
+        if (p && q && r.status === 'q' && !p.got && clean(b.text, 60) && !q.a.some(a => norm(a) === norm(b.text))) { say(r, { n: p.name, t: clean(b.text, 60) }); push(r); }
+        else if (p && q && r.status === 'q' && !p.got && clean(b.text, 60)) {
           const el = Math.min(r.limit, (Date.now() - r.t0) / 1000);
-          p.got = Math.max(10, Math.round(100 * (1 - el / r.limit))); p.score += p.got;
+          p.got = Math.max(10, Math.round(100 * (1 - el / r.limit))); p.score += p.got; say(r, { n: p.name, ok: p.got });
           const online = [...r.players.values()].filter(x => x.on > 0);
           if (online.length && online.every(x => x.got)) reveal(r); else push(r);
         }
