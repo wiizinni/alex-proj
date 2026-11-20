@@ -41,6 +41,7 @@ button.g{background:transparent;color:var(--fg);border:1px solid var(--mu)}
     <div class="row"><input id="ha" placeholder="Accepted answers, comma separated"><button id="ad">Add</button></div>
     <div class="mu" id="hs"></div>
     <ul id="hl"></ul>
+    <div class="row"><button class="g" id="ex">Save question pack</button><button class="g" id="im">Load question pack</button><input type="file" id="imf" accept="application/json,.json" hidden></div>
   </section>
 </div>
 </main>
@@ -107,5 +108,21 @@ $('ad').onclick=async()=>{const s=$('hs'),a=$('ha').value.split(',').map(x=>x.tr
   try{if($('ht').value==='image'){const f=$('hf').files[0];if(!f){s.textContent='Choose an image first.';return}s.textContent='Uploading…';m.image=await shrink(f)}}
   catch(e){s.textContent=e.message;return}
   s.textContent='';await host(m);if(!s.textContent){s.textContent='Added ✓';$('hp').value=$('ha').value='';$('hf').value=''}};
+const rd=b=>new Promise(ok=>{const f=new FileReader();f.onload=()=>ok(f.result);f.readAsDataURL(b)});
+$('ex').onclick=async()=>{const s=$('hs');if(!S||!S.qs.length){s.textContent='No questions to save yet.';return}
+  s.textContent='Preparing…';
+  try{const list=[];for(const q of S.qs){const o={p:q.p,a:q.a};
+    if(q.img){const r=await fetch('/img/'+S.code+'/'+q.id);o.image=await rd(await r.blob())}list.push(o)}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,questions:list})],{type:'application/json'}));
+    a.download='pop-quiz-pack.json';a.click();s.textContent='Saved '+list.length+' questions ✓'}
+  catch(e){s.textContent='Could not save the pack.'}};
+$('im').onclick=()=>$('imf').click();
+$('imf').onchange=async()=>{const f=$('imf').files[0],s=$('hs');if(!f)return;
+  try{const l=(JSON.parse(await f.text()).questions)||[];let n=0;
+    for(const q of l){s.textContent='Loading '+(++n)+' of '+l.length+'…';
+      await api('host',{code:ses.code,token:ses.token,action:'add',p:q.p,a:q.a,image:q.image})}
+    s.textContent='Loaded '+l.length+' questions ✓'}
+  catch(e){s.textContent='Could not load that file: '+e.message}
+  $('imf').value=''};
 if(ses)connect();
 </script></body></html>
