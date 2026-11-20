@@ -93,6 +93,10 @@ function connect(){
   es.onmessage=e=>{S=JSON.parse(e.data);recv=Date.now();render()};
   es.addEventListener('gone',()=>leave('That room no longer exists.'));
 }
+const ic={};
+function loadImg(i,u){if(ic[u]){i.src=ic[u];return}
+  fetch(u).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(b=>{ic[u]=URL.createObjectURL(b);i.src=ic[u]})
+  .catch(()=>{const m=el('div','mu','⚠ The image couldn’t load. Try refreshing the page.');i.replaceWith(m)})}
 function render(){
   $('home').hidden=true;$('room').hidden=false;$('gr').hidden=false;$('code').textContent=S.code;
   $('host').hidden=!S.host;
@@ -102,7 +106,7 @@ function render(){
   if(S.status==='idle'||!S.q){g.append(el('div','mu',S.count?'Waiting for the host to start…':'No questions yet. '+(S.host?'Add some in Host controls.':'The host needs to add some.')))}
   else{
     g.append(el('div','',null));g.lastChild.id='q';g.lastChild.textContent=S.q.p;
-    if(S.q.img){const i=el('img');i.id='img';i.src=S.q.img;i.alt='Quiz image';g.append(i)}
+    if(S.q.img){const i=el('img');i.id='img';i.alt='Quiz image';g.append(i);loadImg(i,S.q.img)}
     const t=el('div');t.id='tm';g.append(t);
     if(S.answer)g.append(el('div','ans','Answer: '+S.answer));
     if(me.got)g.append(el('div','you','✓ You got it! +'+me.got));
