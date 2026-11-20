@@ -1,50 +1,71 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pop Quiz Party</title>
+<title>PopSauce: Alex! Edition</title>
 <style>
-:root{--bg:#fff;--fg:#1b1b24;--card:#f1effb;--ac:#6d4aff;--ok:#1a9a5a;--mu:#6b6b7b}
-@media (prefers-color-scheme:dark){:root{--bg:#14131c;--fg:#f0eefa;--card:#211f2f;--ac:#9b83ff;--ok:#4fd18b;--mu:#a09fb3}}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,sans-serif}
-main{max-width:640px;margin:0 auto;padding:16px;display:grid;gap:12px}
-h1{margin:0;font-size:1.5rem}h2{margin:0 0 8px;font-size:1rem}
-.card{background:var(--card);border-radius:14px;padding:14px}
-input,select,button{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--mu);background:var(--bg);color:var(--fg);max-width:100%;box-sizing:border-box}
-button{background:var(--ac);color:#fff;border:0;cursor:pointer;font-weight:600}
-button.g{background:transparent;color:var(--fg);border:1px solid var(--mu)}
+:root{--bg:#0e1420;--pn:#19212f;--p2:#222e42;--fg:#e8edf5;--mu:#8fa0b8;--ac:#ffc933;--ok:#3ddc84;--bad:#ff6b6b;--ln:#2c3a52}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+#app{max-width:1000px;margin:0 auto;padding:12px 12px calc(84px + env(safe-area-inset-bottom))}
+h1{margin:0;font-size:1.3rem}h2{margin:0 0 8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+input,select,button{font:inherit;padding:11px 14px;border-radius:10px;border:1px solid var(--ln);background:var(--p2);color:var(--fg);min-height:46px;max-width:100%}
+button{background:var(--ac);color:#1a1400;border:0;cursor:pointer;font-weight:700}
+button.g{background:transparent;color:var(--fg);border:1px solid var(--ln)}
+.card{background:var(--pn);border-radius:14px;padding:14px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.row input{flex:1;min-width:120px}
-#q{font-size:1.3rem;font-weight:700;margin:6px 0}
-#img{max-width:100%;max-height:300px;border-radius:10px;display:block;margin:8px 0}
-.mu{color:var(--mu);font-size:.9rem}.ok{color:var(--ok);font-weight:700}li{margin:4px 0}
-#code{font-size:1.6rem;letter-spacing:.2em;font-weight:800}
+.mu{color:var(--mu);font-size:.9rem}
+#home{max-width:420px;margin:12vh auto 0;display:grid;gap:10px}
+#top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+#top h1{flex:1;font-size:1.05rem;min-width:170px}#code{background:var(--p2);padding:6px 12px;border-radius:999px;font-weight:800;letter-spacing:.2em}
+#grid{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);grid-template-areas:"st" "pl" "fd"}
+@media(min-width:800px){#grid{grid-template-columns:240px minmax(0,1fr);grid-template-areas:"pl st" "pl fd"}}
+#st{grid-area:st;padding:0;overflow:hidden}#pl{grid-area:pl}#fd{grid-area:fd}
+#tb{height:8px;background:var(--ln)}#tf{display:block;height:100%;width:0;background:var(--ac);transition:width .3s linear}#tf.lo{background:var(--bad)}
+#sb{padding:18px 14px;min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+#q{font-size:1.5rem;font-weight:800;line-height:1.25}
+#img{max-width:100%;max-height:42vh;object-fit:contain;border-radius:10px}
+#tm{color:var(--ac);font-weight:800;font-size:1.2rem}
+.ans{color:var(--ok);font-size:1.8rem;font-weight:800}.you{color:var(--ok);font-weight:700}
+#pl ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+#pl li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--p2)}
+#pl li.got{background:rgba(61,220,132,.18)}#pl li.off{opacity:.5}
+.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;flex:none}
+.nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.pt{font-weight:800;color:var(--ac)}
+#feed{height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:.95rem;overscroll-behavior:contain}
+#feed .s{color:var(--mu);font-style:italic}#feed .ok{color:var(--ok);font-weight:700}#feed b{color:var(--ac)}
+#gr{position:fixed;left:0;right:0;bottom:0;background:var(--pn);border-top:1px solid var(--ln);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+#gr div{max-width:976px;margin:0 auto;display:flex;gap:8px}#gr input{flex:1;min-width:0}
+details{margin-top:12px}summary{cursor:pointer;font-weight:700;padding:6px 0}
+li.q{margin:4px 0}
 </style></head>
-<body><main>
-<h1>🎉 Pop Quiz Party</h1>
+<body><div id="app">
 <section class="card" id="home">
-  <div class="row"><input id="nm" placeholder="Your nickname" maxlength="20"></div>
-  <div class="row"><button id="cr">Create a room</button></div>
-  <div class="row"><input id="jc" placeholder="Room code" maxlength="4" style="text-transform:uppercase"><button class="g" id="jn">Join</button></div>
+  <h1>🍅 PopSauce: Alex! Edition</h1><div class="mu">Race your friends to the answer.</div>
+  <input id="nm" placeholder="Your nickname" maxlength="20">
+  <input id="jc" placeholder="Room code" maxlength="4" style="text-transform:uppercase;letter-spacing:.2em">
+  <button id="jn">Join room</button><button class="g" id="cr">Create a room</button>
   <div class="mu" id="err"></div>
 </section>
-<div id="room" hidden style="display:grid;gap:12px">
-  <section class="card row"><span class="mu">Room</span><span id="code"></span><button class="g" id="cp">Copy invite link</button><button class="g" id="lv">Leave</button></section>
-  <section class="card" id="game"></section>
-  <div class="row" id="gr" hidden><input id="gi" placeholder="Type your answer…" autocomplete="off"><button id="gb">Guess</button></div>
-  <section class="card"><h2>Scoreboard</h2><ol id="board"></ol></section>
-  <section class="card" id="host" hidden>
-    <h2>Host controls</h2>
+<div id="room" hidden>
+  <div id="top"><h1>🍅 PopSauce: Alex! Edition</h1><span id="code"></span><button class="g" id="cp">Invite</button><button class="g" id="lv">Leave</button></div>
+  <div id="grid">
+    <section class="card" id="st"><div id="tb"><i id="tf"></i></div><div id="sb"></div></section>
+    <section class="card" id="pl"><h2>Players</h2><ul id="board"></ul></section>
+    <section class="card" id="fd"><h2>Guesses</h2><div id="feed"></div></section>
+  </div>
+  <details class="card" id="host" hidden>
+    <summary>Host controls</summary>
     <div class="row"><button id="nx">Next question</button><button class="g" id="rv">Reveal now</button><button class="g" id="rs">Reset scores</button></div>
     <div class="row"><span class="mu">Seconds per question</span><input id="lm" type="number" min="5" max="60" value="20" style="flex:0 0 80px"></div>
     <h2>Add a question</h2>
-    <div class="row"><select id="ht"><option value="text">Text</option><option value="image">Image</option></select><input id="hp" placeholder="Prompt (e.g. Which show is this from?)"></div>
+    <div class="row"><select id="ht"><option value="text">Text</option><option value="image">Image</option></select><input id="hp" placeholder="Prompt (optional for images)"></div>
     <div class="row" id="hfw" hidden><input type="file" id="hf" accept="image/*"></div>
     <div class="row"><input id="ha" placeholder="Accepted answers, comma separated"><button id="ad">Add</button></div>
-    <div class="mu" id="hs"></div>
-    <ul id="hl"></ul>
+    <div class="mu" id="hs"></div><ul id="hl" style="padding-left:18px"></ul>
     <div class="row"><button class="g" id="ex">Save question pack</button><button class="g" id="im">Load question pack</button><input type="file" id="imf" accept="application/json,.json" hidden></div>
-  </section>
-</div>
-</main>
+  </details>
+</div></div>
+<div id="gr" hidden><div><input id="gi" placeholder="Type your guess…" autocomplete="off" enterkeyhint="send"><button id="gb">Guess</button></div></div>
 <script>
 const $=id=>document.getElementById(id);
 let S=null,es=null,recv=0,ses=null,lastQ=null;
@@ -55,9 +76,11 @@ async function api(p,b){const r=await fetch('/api/'+p,{method:'POST',headers:{'C
   const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Something went wrong');return j}
 const name=()=>{const n=$('nm').value.trim()||'Player';try{localStorage.setItem('pq-name',n)}catch(e){}return n};
 const host=a=>api('host',{code:ses.code,token:ses.token,...a}).catch(e=>{$('hs').textContent=e.message});
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
 function enter(s){ses=s;try{sessionStorage.setItem('pq',JSON.stringify(s))}catch(e){}connect()}
 function leave(m){if(es)es.close();ses=S=null;try{sessionStorage.removeItem('pq')}catch(e){}
-  $('home').hidden=false;$('room').hidden=true;$('err').textContent=m||''}
+  $('home').hidden=false;$('room').hidden=true;$('gr').hidden=true;$('err').textContent=m||''}
 $('cr').onclick=async()=>{try{enter(await api('create',{name:name()}))}catch(e){$('err').textContent=e.message}};
 $('jn').onclick=async()=>{const code=$('jc').value.trim().toUpperCase();
   try{const j=await api('join',{code,name:name()});enter({code,pid:j.pid})}catch(e){$('err').textContent=e.message}};
@@ -71,32 +94,43 @@ function connect(){
   es.addEventListener('gone',()=>leave('That room no longer exists.'));
 }
 function render(){
-  $('home').hidden=true;$('room').hidden=false;$('code').textContent=S.code;
-  $('host').hidden=!S.host;$('gr').hidden=S.status!=='q';
-  const g=$('game');g.textContent='';const me=S.players.find(p=>p.id===S.me)||{};
-  if(S.status==='idle'||!S.q){g.textContent=S.count?'Waiting for the host to start…':'No questions yet. '+(S.host?'Add some below.':'The host needs to add some.');}
+  $('home').hidden=true;$('room').hidden=false;$('gr').hidden=false;$('code').textContent=S.code;
+  $('host').hidden=!S.host;
+  const live=S.status==='q';$('gi').disabled=!live;$('gb').disabled=!live;
+  $('gi').placeholder=live?'Type your guess…':'Waiting for the next question…';
+  const g=$('sb');g.textContent='';const me=S.players.find(p=>p.id===S.me)||{};
+  if(S.status==='idle'||!S.q){g.append(el('div','mu',S.count?'Waiting for the host to start…':'No questions yet. '+(S.host?'Add some in Host controls.':'The host needs to add some.')))}
   else{
-    const p=document.createElement('div');p.id='q';p.textContent=S.q.p;g.append(p);
-    if(S.q.img){const i=document.createElement('img');i.id='img';i.src=S.q.img;i.alt='Quiz image';g.append(i)}
-    const t=document.createElement('div');t.id='tm';t.className='mu';g.append(t);
-    const r=document.createElement('div');r.className='ok';g.append(r);
-    if(S.answer)r.textContent='Answer: '+S.answer;else if(me.got)r.textContent='✓ You got it! +'+me.got;
+    g.append(el('div','',null));g.lastChild.id='q';g.lastChild.textContent=S.q.p;
+    if(S.q.img){const i=el('img');i.id='img';i.src=S.q.img;i.alt='Quiz image';g.append(i)}
+    const t=el('div');t.id='tm';g.append(t);
+    if(S.answer)g.append(el('div','ans','Answer: '+S.answer));
+    if(me.got)g.append(el('div','you','✓ You got it! +'+me.got));
   }
-  if(S.status==='q'&&lastQ!==S.q.p+S.q.img){$('gi').value='';$('gi').focus()}
+  if(live&&lastQ!==S.q.p+S.q.img){$('gi').value='';$('gi').focus()}
   lastQ=S.q?S.q.p+S.q.img:null;
   const b=$('board');b.textContent='';
-  [...S.players].sort((a,c)=>c.score-a.score).forEach(p=>{const l=document.createElement('li');
-    l.textContent=p.name+(p.id===S.me?' (you)':'')+' — '+p.score+(p.on?'':' (away)')+(p.got?' ✓':'');b.append(l)});
-  if(S.host){$('lm').value!==String(S.limit)&&document.activeElement!==$('lm')&&($('lm').value=S.limit);
+  [...S.players].sort((a,c)=>c.score-a.score).forEach(p=>{
+    const l=el('li',(p.got?'got ':'')+(p.on?'':'off'));
+    const a=el('span','av',p.name.slice(0,1).toUpperCase());a.style.background='hsl('+hue(p.name)+' 55% 42%)';
+    l.append(a,el('span','nm',p.name+(p.id===S.me?' (you)':'')),el('span','pt',(p.got?'✓ ':'')+p.score));b.append(l)});
+  const f=$('feed');f.textContent='';
+  (S.feed||[]).forEach(m=>{
+    if(m.s)f.append(el('div','s',m.s));
+    else if(m.ok)f.append(el('div','ok',m.n+' found the answer! +'+m.ok));
+    else{const d=el('div');d.append(el('b','',m.n+': '),document.createTextNode(m.t));f.append(d)}});
+  f.scrollTop=f.scrollHeight;
+  if(S.host){if(document.activeElement!==$('lm'))$('lm').value=S.limit;
     const u=$('hl');u.textContent='';
-    S.qs.forEach(q=>{const l=document.createElement('li');l.textContent=(q.img?'🖼 ':'')+(q.p||'(image)')+' → '+q.a.join(' / ')+' ';
-      const d=document.createElement('button');d.className='g';d.textContent='Delete';d.onclick=()=>host({action:'del',id:q.id});l.append(d);u.append(l)})}
+    S.qs.forEach(q=>{const l=el('li','q',(q.img?'🖼 ':'')+(q.p||'(image)')+' → '+q.a.join(' / ')+' ');
+      const d=el('button','g','Delete');d.style.minHeight='34px';d.style.padding='4px 10px';d.onclick=()=>host({action:'del',id:q.id});l.append(d);u.append(l)})}
   clock();
 }
-function clock(){const t=$('tm');if(!t||!S)return;
-  t.textContent=S.status==='q'?Math.max(0,Math.ceil((S.left-(Date.now()-recv))/1000))+'s left':'Round over'}
+function clock(){if(!S)return;const left=S.status==='q'?Math.max(0,S.left-(Date.now()-recv)):0,t=$('tm'),f=$('tf');
+  if(t)t.textContent=S.status==='q'?Math.ceil(left/1000)+'s':'';
+  f.style.width=(S.status==='q'?left/(S.limit*1000)*100:0)+'%';f.className=left<5000&&S.status==='q'?'lo':''}
 setInterval(clock,250);
-async function guess(){const v=$('gi').value.trim();if(!v)return;$('gi').value='';api('guess',{code:ses.code,pid:ses.pid,text:v}).catch(()=>{})}
+async function guess(){const v=$('gi').value.trim();if(!v)return;$('gi').value='';api('guess',{code:ses.code,pid:ses.pid,text:v}).catch(()=>{});$('gi').focus()}
 $('gb').onclick=guess;$('gi').onkeydown=e=>{if(e.key==='Enter')guess()};
 $('nx').onclick=()=>host({action:'next'});$('rv').onclick=()=>host({action:'reveal'});
 $('rs').onclick=()=>host({action:'reset'});$('lm').onchange=()=>host({action:'limit',n:$('lm').value});
